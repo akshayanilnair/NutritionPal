@@ -1,0 +1,92 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and nutrition goals.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "age": { "type": "number" },
+        "gender": { "type": "string", "enum": ["male", "female", "other"] },
+        "height": { "type": "number", "description": "Height in cm" },
+        "weight": { "type": "number", "description": "Weight in kg" },
+        "activityLevel": { "type": "string", "enum": ["sedentary", "light", "moderate", "active", "very_active"] },
+        "dietaryPreference": { "type": "string", "enum": ["veg", "non_veg", "vegan", "jain", "halal"] },
+        "cuisinePreferences": { "type": "array", "items": { "type": "string" } },
+        "dislikes": { "type": "string" },
+        "targetWeight": { "type": "number" },
+        "dailyCalorieTarget": { "type": "number" },
+        "bmi": { "type": "number" },
+        "xp": { "type": "number" },
+        "level": { "type": "number" },
+        "streak": { "type": "number" },
+        "lastActiveDate": { "type": "string", "description": "YYYY-MM-DD" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "email", "createdAt"]
+    },
+    "FoodLog": {
+      "title": "FoodLog",
+      "description": "A single food item logged by a user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string", "description": "YYYY-MM-DD" },
+        "mealType": { "type": "string", "enum": ["breakfast", "lunch", "snack", "dinner"] },
+        "foodName": { "type": "string" },
+        "calories": { "type": "number" },
+        "protein": { "type": "number" },
+        "carbs": { "type": "number" },
+        "fat": { "type": "number" },
+        "portionSize": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "mealType", "foodName", "calories", "createdAt"]
+    },
+    "MealPlan": {
+      "title": "MealPlan",
+      "description": "AI generated meal plan for a specific day.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string", "description": "YYYY-MM-DD" },
+        "plan": { "type": "string", "description": "JSON stringified meal plan" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "plan", "createdAt"]
+    },
+    "WeightLog": {
+      "title": "WeightLog",
+      "description": "User's weight logged on a specific date.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string", "description": "YYYY-MM-DD" },
+        "weight": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "weight", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles."
+    },
+    "/foodLogs/{logId}": {
+      "schema": { "$ref": "#/entities/FoodLog" },
+      "description": "Food logs for all users."
+    },
+    "/mealPlans/{planId}": {
+      "schema": { "$ref": "#/entities/MealPlan" },
+      "description": "AI generated meal plans."
+    },
+    "/weightLogs/{logId}": {
+      "schema": { "$ref": "#/entities/WeightLog" },
+      "description": "Weight tracking logs."
+    }
+  }
+}

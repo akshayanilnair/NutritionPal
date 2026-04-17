@@ -1,0 +1,196 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId (matches auth.uid)
+    // Fields:
+    //   - uid: string (required)
+    //   - name: string (required)
+    //   - email: string (required)
+    //   - age: number
+    //   - gender: string
+    //   - height: number
+    //   - weight: number
+    //   - activityLevel: string
+    //   - dietaryPreference: string
+    //   - cuisinePreferences: list
+    //   - dislikes: string
+    //   - targetWeight: number
+    //   - dailyCalorieTarget: number
+    //   - bmi: number
+    //   - createdAt: timestamp (required)
+    //   - updatedAt: timestamp
+    //
+    // Collection: foodLogs
+    // Document ID: auto-generated
+    // Fields:
+    //   - userId: string (required)
+    //   - date: string (required)
+    //   - mealType: string (required)
+    //   - foodName: string (required)
+    //   - calories: number (required)
+    //   - protein: number
+    //   - carbs: number
+    //   - fat: number
+    //   - portionSize: string
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: mealPlans
+    // Document ID: auto-generated
+    // Fields:
+    //   - userId: string (required)
+    //   - date: string (required)
+    //   - plan: string (required)
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: weightLogs
+    // Document ID: auto-generated
+    // Fields:
+    //   - userId: string (required)
+    //   - date: string (required)
+    //   - weight: number (required)
+    //   - createdAt: timestamp (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function isRequestDocOwner() {
+      return isAuthenticated() && request.auth.uid == request.resource.data.userId;
+    }
+
+    function uidUnchanged() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    function userIdUnchanged() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == request.auth.uid;
+    }
+
+    function userIdNotModified() {
+      return !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasRequiredFields(['uid', 'name', 'email', 'createdAt']) &&
+             data.uid is string && data.uid == request.auth.uid &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             isValidEmail(data.email) &&
+             (!('age' in data) || (data.age is number && data.age > 0 && data.age < 150)) &&
+             (!('gender' in data) || (data.gender in ['male', 'female', 'other'])) &&
+             (!('height' in data) || (data.height is number && data.height > 0 && data.height < 300)) &&
+             (!('weight' in data) || (data.weight is number && data.weight > 0 && data.weight < 500)) &&
+             (!('activityLevel' in data) || (data.activityLevel in ['sedentary', 'light', 'moderate', 'active', 'very_active'])) &&
+             (!('dietaryPreference' in data) || (data.dietaryPreference in ['veg', 'non_veg', 'vegan', 'jain', 'halal'])) &&
+             (!('cuisinePreferences' in data) || (data.cuisinePreferences is list && data.cuisinePreferences.size() <= 20)) &&
+             (!('dislikes' in data) || (data.dislikes is string && data.dislikes.size() <= 500)) &&
+             (!('healthIssues' in data) || (data.healthIssues is list && data.healthIssues.size() <= 20)) &&
+             (!('targetWeight' in data) || (data.targetWeight is number && data.targetWeight > 0 && data.targetWeight < 500)) &&
+             (!('dailyCalorieTarget' in data) || (data.dailyCalorieTarget is number && data.dailyCalorieTarget > 0 && data.dailyCalorieTarget < 10000)) &&
+             (!('bmi' in data) || (data.bmi is number && data.bmi > 0 && data.bmi < 100)) &&
+             (!('xp' in data) || (data.xp is number && data.xp >= 0)) &&
+             (!('level' in data) || (data.level is number && data.level >= 1)) &&
+             (!('streak' in data) || (data.streak is number && data.streak >= 0)) &&
+             (!('lastActiveDate' in data) || (data.lastActiveDate is string && data.lastActiveDate.matches("^\\d{4}-\\d{2}-\\d{2}$"))) &&
+             data.createdAt is timestamp &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function isValidFoodLog(data) {
+      return hasRequiredFields(['userId', 'date', 'mealType', 'foodName', 'calories', 'createdAt']) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.date is string && data.date.matches("^\\d{4}-\\d{2}-\\d{2}$") &&
+             data.mealType in ['breakfast', 'lunch', 'snack', 'dinner'] &&
+             data.foodName is string && data.foodName.size() > 0 && data.foodName.size() < 200 &&
+             data.calories is number && data.calories >= 0 && data.calories < 10000 &&
+             (!('protein' in data) || (data.protein is number && data.protein >= 0 && data.protein < 1000)) &&
+             (!('carbs' in data) || (data.carbs is number && data.carbs >= 0 && data.carbs < 1000)) &&
+             (!('fat' in data) || (data.fat is number && data.fat >= 0 && data.fat < 1000)) &&
+             (!('portionSize' in data) || (data.portionSize is string && data.portionSize.size() <= 100)) &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidMealPlan(data) {
+      return hasRequiredFields(['userId', 'date', 'plan', 'createdAt']) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.date is string && data.date.matches("^\\d{4}-\\d{2}-\\d{2}$") &&
+             data.plan is string && data.plan.size() > 0 && data.plan.size() < 50000 &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidWeightLog(data) {
+      return hasRequiredFields(['userId', 'date', 'weight', 'createdAt']) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.date is string && data.date.matches("^\\d{4}-\\d{2}-\\d{2}$") &&
+             data.weight is number && data.weight > 0 && data.weight < 500 &&
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && uidUnchanged();
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && uidNotModified() && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isOwner(userId);
+    }
+
+    match /foodLogs/{logId} {
+      allow read: if isDocOwner();
+      allow create: if isRequestDocOwner() && isValidFoodLog(request.resource.data) && userIdUnchanged();
+      allow update: if isDocOwner() && isRequestDocOwner() && isValidFoodLog(request.resource.data) && userIdNotModified() && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isDocOwner();
+    }
+
+    match /mealPlans/{planId} {
+      allow read: if isDocOwner();
+      allow create: if isRequestDocOwner() && isValidMealPlan(request.resource.data) && userIdUnchanged();
+      allow update: if isDocOwner() && isRequestDocOwner() && isValidMealPlan(request.resource.data) && userIdNotModified() && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isDocOwner();
+    }
+
+    match /weightLogs/{logId} {
+      allow read: if isDocOwner();
+      allow create: if isRequestDocOwner() && isValidWeightLog(request.resource.data) && userIdUnchanged();
+      allow update: if isDocOwner() && isRequestDocOwner() && isValidWeightLog(request.resource.data) && userIdNotModified() && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isDocOwner();
+    }
+  }
+}

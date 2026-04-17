@@ -1,0 +1,72 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-background: hsl(38, 50%, 97%);
+  --color-foreground: hsl(150, 30%, 12%);
+  --color-card: hsl(0, 0%, 100%);
+  --color-card-foreground: hsl(150, 30%, 12%);
+  --color-popover: hsl(0, 0%, 100%);
+  --color-popover-foreground: hsl(150, 30%, 12%);
+  --color-primary: hsl(22, 95%, 55%);
+  --color-primary-foreground: hsl(38, 50%, 98%);
+  --color-secondary: hsl(148, 55%, 28%);
+  --color-secondary-foreground: hsl(38, 50%, 98%);
+  --color-muted: hsl(36, 30%, 92%);
+  --color-muted-foreground: hsl(150, 12%, 38%);
+  --color-accent: hsl(358, 75%, 55%);
+  --color-accent-foreground: hsl(38, 50%, 98%);
+  --color-destructive: hsl(0, 75%, 50%);
+  --color-border: hsl(36, 25%, 88%);
+  --color-input: hsl(36, 25%, 90%);
+  --color-ring: hsl(22, 95%, 55%);
+
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "DM Serif Display", ui-serif, Georgia, serif;
+}
+
+:root {
+  --gradient-spice: linear-gradient(135deg, hsl(22, 95%, 55%), hsl(358, 75%, 55%));
+  --gradient-marigold: linear-gradient(135deg, hsl(45, 100%, 60%), hsl(22, 95%, 55%));
+  --gradient-leaf: linear-gradient(135deg, hsl(148, 55%, 28%), hsl(168, 60%, 38%));
+  --gradient-hero: radial-gradient(ellipse at top left, hsla(22, 95%, 55%, 0.15), transparent 40%), radial-gradient(ellipse at bottom right, hsla(148, 55%, 28%, 0.15), transparent 40%), hsl(38, 50%, 97%);
+  --gradient-card: linear-gradient(135deg, hsla(0, 0%, 100%, 0.7), hsla(36, 50%, 96%, 0.7));
+  --shadow-spice: 0 18px 40px -12px hsla(22, 95%, 55%, 0.35);
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  background-image: var(--gradient-hero);
+  background-attachment: fixed;
+  color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.lovable-gradient-spice { background-image: var(--gradient-spice); }
+.lovable-gradient-leaf { background-image: var(--gradient-leaf); }
+.lovable-gradient-card { 
+  background-image: var(--gradient-card); 
+  border: 1px solid rgba(255,255,255,0.7); 
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05); 
+  backdrop-filter: blur(12px); 
+  -webkit-backdrop-filter: blur(12px); 
+}
+.shadow-spice { box-shadow: var(--shadow-spice); }
+
+/* Custom scrollbar for a cleaner look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-muted-foreground);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-foreground);
+}
